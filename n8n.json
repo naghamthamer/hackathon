@@ -1,0 +1,1174 @@
+{
+  "name": "n8n",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        60,
+        120
+      ],
+      "id": "e3f89aed-51bc-4da0-aba6-6749d34dbdf5",
+      "name": "Telegram Trigger",
+      "webhookId": "82620206-1f3e-4127-bc33-bfc1c91bfa3a",
+      "credentials": {
+        "telegramApi": {
+          "id": "MjJheFSW8gmPSr9i",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "={{ $json.message.text }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "id": "982dccd1-3510-4737-bb14-5b7c1769495c"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Text"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "12697655-fec9-40b4-9cd0-0dd2e03673ce",
+                    "leftValue": "={{ $json.message.voice.file_id }}",
+                    "rightValue": "={{ $json.message.voice.file_id}}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Voice"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        240,
+        120
+      ],
+      "id": "23b8a380-0ab7-424c-ab38-a96331ec57c0",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a95de723-2cc3-4717-bca3-e8340a7390e2",
+              "name": "message.text",
+              "value": "={{ $('Telegram Trigger').item.json.message.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        480,
+        -40
+      ],
+      "id": "b37ec587-fc86-4a57-90d2-41c87779afcb",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.voice.file_id }}",
+        "download": "={{ true }}"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        480,
+        240
+      ],
+      "id": "15e7c9ae-4f45-4f32-b917-9e2d018d6121",
+      "name": "Telegram",
+      "webhookId": "f25a724f-4270-44a5-82e7-430619366e6d",
+      "credentials": {
+        "telegramApi": {
+          "id": "MjJheFSW8gmPSr9i",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        740,
+        240
+      ],
+      "id": "c3ff910f-a183-46a6-9e1e-de2aa82f332b",
+      "name": "OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "YTfb2tWb7LkjzoIM",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "You are a friendly retail data analyst assistant. You analyze transaction data with these fields:\n\ntransaction_id, mall_name, branch_name, transaction_date\n\ntax_amount, transaction_amount, transaction_type, transaction_status\n\nTools available: \"Google Sheets1\" for data lookup/analysis.\n\nKey rules:\n\nMatch the user's language (Arabic/English)\n\nRemember context (e.g., if they ask about Riyadh then \"What about Jeddah?\", keep same metric)\n\nBe kind and clear. If data is missing say:\n\"I need more information to answer that.\" / \"أحتاج إلى مزيد من التفاصيل\"\n\nNever assume beyond the dataset\n\nAlways use the tool for data requests\n\nClarify unclear questions gently"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        1540,
+        100
+      ],
+      "id": "520627cd-800a-440c-a383-498316aa5f49",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-3.5-turbo",
+          "mode": "list",
+          "cachedResultName": "gpt-3.5-turbo"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1380,
+        300
+      ],
+      "id": "18e07027-6387-4291-bf6c-400ab83a3cc3",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "YTfb2tWb7LkjzoIM",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Switch').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2080,
+        100
+      ],
+      "id": "b95bbd11-071c-4b44-bb00-ca0de0b54835",
+      "name": "Telegram1",
+      "webhookId": "65d98f0a-c70e-4d9c-8bd9-820cd380fdfe",
+      "credentials": {
+        "telegramApi": {
+          "id": "MjJheFSW8gmPSr9i",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={ { $json.message.from.id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        1580,
+        300
+      ],
+      "id": "7ea43475-6617-4715-bd8e-c8488f21fde6",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dateTimeTool",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        320
+      ],
+      "id": "e54785c3-cef4-4405-9e7a-55af83addd5c",
+      "name": "Date_Time"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [
+        2040,
+        320
+      ],
+      "id": "571e8d4b-0fff-4eab-b3e1-c3425c880078",
+      "name": "Calculator"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1-94A5BsDNbpbGWcAW6_2Dz36q_tr5go8OePMqLsZJIY",
+          "mode": "list",
+          "cachedResultName": "Mall",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-94A5BsDNbpbGWcAW6_2Dz36q_tr5go8OePMqLsZJIY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1808798439,
+          "mode": "list",
+          "cachedResultName": "jordan_transactions",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-94A5BsDNbpbGWcAW6_2Dz36q_tr5go8OePMqLsZJIY/edit#gid=1808798439"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.5,
+      "position": [
+        1780,
+        320
+      ],
+      "id": "5e2abb48-6f70-423f-b63b-ffa47d821395",
+      "name": "Google_Sheets1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Hx1womwXMO7pBG2b",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "for (const item of $input.all()) {\n  const json = item.json;\n  let inputText = json.text; // Assuming the field name is 'text'\n\n  // Crucial: Check if inputText is a string and not null/undefined\n  if (typeof inputText === 'string' && inputText.length > 0) {\n    // Apply your cleaning/processing functions here\n    // Example:\n    inputText = inputText.toLowerCase().trim();\n    // If you had replace() previously, ensure inputText is not empty string before using it\n    // For example: inputText = inputText.replace(/[^a-zA-Z0-9 ]/g, ''); // remove special chars\n  } else {\n    // Handle cases where input text is not a string or is empty\n    // You might want to set it to an empty string or skip this item\n    inputText = \"\"; // Set to empty string to avoid errors later\n    // console.warn(\"Input text is undefined or not a string for item:\", json); // For debugging\n  }\n\n  // Ensure the output contains the 'text' field\n  return [{ json: { text: inputText } }];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        700,
+        -40
+      ],
+      "id": "a29edfee-2463-4d3d-b021-d4be803cf1ee",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "mode": "load",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "n8n",
+          "mode": "list",
+          "cachedResultName": "n8n"
+        },
+        "prompt": "={{ $json.text }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.1,
+      "position": [
+        940,
+        -40
+      ],
+      "id": "a7bbd5b9-c6a4-41a1-98c2-253f2c83a788",
+      "name": "Pinecone Vector Store1",
+      "credentials": {
+        "pineconeApi": {
+          "id": "upbQWCii0iWD3h0P",
+          "name": "PineconeApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "text-embedding-ada-002",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        940,
+        100
+      ],
+      "id": "b1e516b5-446c-4fad-9c63-61b22b1bdc75",
+      "name": "Embeddings OpenAI1",
+      "credentials": {
+        "openAiApi": {
+          "id": "YTfb2tWb7LkjzoIM",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst retrievedTransactions = [];\n\nif (items[0] && items[0].json && items[0].json.data && items[0].json.data.matches) {\n  for (const match of items[0].json.data.matches) {\n    const metadata = match.metadata;\n\n    // Add || 'N/A' to handle cases where metadata fields might be undefined\n    retrievedTransactions.push(\n      `Transaction ID: ${metadata.transaction_id || 'N/A'}, Date: ${metadata.date || 'N/A'}, Mall: ${metadata.mall || 'N/A'}, Product: ${metadata.product || 'N/A'}, Amount: ${metadata.amount || 'N/A'} JOD, Category: ${metadata.category || 'N/A'}.`\n    );\n  }\n}\nreturn [{ json: { retrieved_context: retrievedTransactions.join('\\n\\n') } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1300,
+        -40
+      ],
+      "id": "dd522c07-a1f4-49a9-92cc-2a64720151e3",
+      "name": "Code2"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        480,
+        1280
+      ],
+      "id": "b1908d9b-6c12-4a27-b88a-082bae22ea84",
+      "name": "When clicking ‘Test workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1-94A5BsDNbpbGWcAW6_2Dz36q_tr5go8OePMqLsZJIY",
+          "mode": "list",
+          "cachedResultName": "Mall",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-94A5BsDNbpbGWcAW6_2Dz36q_tr5go8OePMqLsZJIY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1808798439,
+          "mode": "list",
+          "cachedResultName": "jordan_transactions",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-94A5BsDNbpbGWcAW6_2Dz36q_tr5go8OePMqLsZJIY/edit#gid=1808798439"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        700,
+        1280
+      ],
+      "id": "dab5fd5f-1588-48be-b976-57bdd897bb28",
+      "name": "Google Sheets1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Hx1womwXMO7pBG2b",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n  const row = item.json;\n\n  return {\n    json: {\n      // هنا ننسق النص بطريقة سهلة للفهم\n      text: `Transaction on ${row.Date} at ${row.Mall}: bought ${row.Product} (Category: ${row.Category}) for ${row.Amount} using ${row.PaymentType}.`\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        1280
+      ],
+      "id": "2bed1461-8c6f-40bc-9b77-39d55f0dee0b",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "n8n",
+          "mode": "list",
+          "cachedResultName": "n8n"
+        },
+        "embeddingBatchSize": 250,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.1,
+      "position": [
+        1240,
+        1280
+      ],
+      "id": "f8e37ae0-962c-4867-84ff-1a7d1d9ac31e",
+      "name": "Pinecone Vector Store",
+      "credentials": {
+        "pineconeApi": {
+          "id": "upbQWCii0iWD3h0P",
+          "name": "PineconeApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "text-embedding-ada-002",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1200,
+        1460
+      ],
+      "id": "cc458c07-fb28-4931-aae5-2acc327be207",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "YTfb2tWb7LkjzoIM",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1,
+      "position": [
+        1380,
+        1460
+      ],
+      "id": "c5a8ca69-7b11-4285-9340-8f12797dadbe",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "chunkSize": 500,
+        "chunkOverlap": 50,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        1440,
+        1600
+      ],
+      "id": "d6559ce2-3b63-47ec-a34e-4cd5e667a5d8",
+      "name": "Recursive Character Text Splitter"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "={{ $json.message.text }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "id": "982dccd1-3510-4737-bb14-5b7c1769495c"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Text"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "12697655-fec9-40b4-9cd0-0dd2e03673ce",
+                    "leftValue": "={{ $json.message.voice.file_id }}",
+                    "rightValue": "={{ $json.message.voice.file_id}}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Voice"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        560,
+        760
+      ],
+      "id": "3785e946-2b07-4e94-b666-431760f9248b",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.voice.file_id }}",
+        "download": "={{ true }}"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        760,
+        860
+      ],
+      "id": "163823fb-dcec-43ae-a122-d63cb611fa99",
+      "name": "Telegram2",
+      "webhookId": "f25a724f-4270-44a5-82e7-430619366e6d",
+      "credentials": {
+        "telegramApi": {
+          "id": "MjJheFSW8gmPSr9i",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        940,
+        860
+      ],
+      "id": "038aed2c-4b87-4ad6-ad1a-653867158021",
+      "name": "OpenAI1",
+      "credentials": {
+        "openAiApi": {
+          "id": "YTfb2tWb7LkjzoIM",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "You are a friendly retail data analyst assistant.\nYou analyze transaction data with these fields:\ntransaction_id, mall_name, branch_name, transaction_date, tax_amount, transaction_amount, transaction_type, transaction_status.\nTool: \"Google Sheets1\" for data lookup/analysis.\n\nKey Rules:\n- Match user's language.\n- Remember context.\n- Be kind and clear.\n- If data is missing say: \"I need more information to answer that.\" / \"أحتاج إلى مزيد من التفاصيل\".\n- Never assume beyond the dataset.\n- Always use the tool for data requests.\n- Clarify unclear questions gently."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        1200,
+        780
+      ],
+      "id": "5426d4d6-82a2-43c6-a591-c396c8fdeaba",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-3.5-turbo-16k",
+          "mode": "list",
+          "cachedResultName": "gpt-3.5-turbo-16k"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1200,
+        960
+      ],
+      "id": "93f5f2ab-aac4-4db6-b2f6-2b07e1291644",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "YTfb2tWb7LkjzoIM",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Switch1').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1720,
+        760
+      ],
+      "id": "448d3c0d-7826-44b9-874a-2b115b78683d",
+      "name": "Telegram3",
+      "webhookId": "65d98f0a-c70e-4d9c-8bd9-820cd380fdfe",
+      "credentials": {
+        "telegramApi": {
+          "id": "MjJheFSW8gmPSr9i",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={ { $json.message.from.id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        1340,
+        960
+      ],
+      "id": "4c071180-8728-4454-a135-5fc291bb9f6a",
+      "name": "Simple Memory1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dateTimeTool",
+      "typeVersion": 2,
+      "position": [
+        1620,
+        960
+      ],
+      "id": "e930aad3-68c5-4ac8-8ec2-a2ca20366968",
+      "name": "Date_Time1"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [
+        1760,
+        1000
+      ],
+      "id": "a79c4c26-5705-4d55-9fb6-44862f552967",
+      "name": "Calculator1"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1-94A5BsDNbpbGWcAW6_2Dz36q_tr5go8OePMqLsZJIY",
+          "mode": "list",
+          "cachedResultName": "Mall",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-94A5BsDNbpbGWcAW6_2Dz36q_tr5go8OePMqLsZJIY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1808798439,
+          "mode": "list",
+          "cachedResultName": "jordan_transactions",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-94A5BsDNbpbGWcAW6_2Dz36q_tr5go8OePMqLsZJIY/edit#gid=1808798439"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.5,
+      "position": [
+        1500,
+        960
+      ],
+      "id": "ea7d3457-a9b6-4513-92d4-22b42bc99d28",
+      "name": "Google_Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Hx1womwXMO7pBG2b",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a95de723-2cc3-4717-bca3-e8340a7390e2",
+              "name": "message.text",
+              "value": "={{ $('Telegram Trigger1').item.json.message.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        880,
+        680
+      ],
+      "id": "e9284b63-0b42-4e9e-b918-b2867fe9e2ef",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "updates": "={{ [\"message\"] }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        380,
+        760
+      ],
+      "id": "f1ea1a49-66c2-450a-953e-869fe416be37",
+      "name": "Telegram Trigger1",
+      "webhookId": "82620206-1f3e-4127-bc33-bfc1c91bfa3a",
+      "credentials": {
+        "telegramApi": {
+          "id": "MjJheFSW8gmPSr9i",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Telegram1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Date_Time": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculator": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google_Sheets1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Pinecone Vector Store1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pinecone Vector Store1": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets1": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram2": {
+      "main": [
+        [
+          {
+            "node": "OpenAI1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Telegram3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Date_Time1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculator1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google_Sheets": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a4359241-eddd-41a7-9ee8-f06cd4f6fd47",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "adc3507553f20e8f566b094626f02c78a8cd741565fcfcdb50c552d6e1851024"
+  },
+  "id": "BgVDKSYI7aPFjiYh",
+  "tags": []
+}
